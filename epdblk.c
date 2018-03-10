@@ -120,7 +120,7 @@ int main(int argc, char **argv) {
         goto cleanup;
     }
 
-    if (strcmp(fb_fix_info.id, "imx_epdc") == 0) {
+    if (strncmp(fb_fix_info.id, "mxc_epdc", 8) == 0) {
         ret = refresh_imx(fb);
     } else {
         ret = ERROR_WRONG_FB;
