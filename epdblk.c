@@ -46,7 +46,7 @@ int close_framebuffer(int fb) {
     return close(fb);
 }
 
-int refresh_imx(int fb) {
+int refresh_mxcfb(int fb) {
 
     if (ioctl(fb, FBIOGET_VSCREENINFO, &fb_var_info) < 0) {
         return ERROR_GET_VINFO;
@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
     }
 
     if (strncmp(fb_fix_info.id, "mxc_epdc", 8) == 0) {
-        ret = refresh_imx(fb);
+        ret = refresh_mxcfb(fb);
     } else {
         ret = ERROR_WRONG_FB;
     }
