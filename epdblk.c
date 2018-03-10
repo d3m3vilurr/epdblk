@@ -8,8 +8,6 @@
 #include <linux/fb.h>
 #include "mxcfb.h"
 
-#define FB_DEV "/dev/graphics/fb0"
-
 enum {
     NO_ERROR            = 0x00,
     ERROR_INV_ARGS      = 0x01,
