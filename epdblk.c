@@ -42,7 +42,7 @@ int open_framebuffer() {
 }
 
 int close_framebuffer(int fb) {
-    close(fb);
+    return close(fb);
 }
 
 #define MXCFB_SEND_UPDATE 0x4040462E
