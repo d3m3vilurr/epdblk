@@ -18,8 +18,9 @@ enum {
     ERROR_GET_FINFO     = 0x10,
     ERROR_GET_VINFO     = 0x11,
     ERROR_WRONG_FB      = 0x20,
-    ERROR_FULL_REFRESH  = 0x30,
-    ERROR_GET_EBC_BUF   = 0x40,
+    ERROR_MXCFB_UPDATE  = 0x30,
+    ERROR_EBC_GET_BUF   = 0x40,
+    ERROR_EBC_SET_BUF   = 0x41,
     ERROR_MMAP          = 0xF0,
 };
 
@@ -79,12 +80,12 @@ int refresh_mxcfb(int fb) {
     struct mxcfb_update_data update_data = {0};
     update_data.update_region.width = fb_var_info.xres;
     update_data.update_region.height = fb_var_info.yres;
-    update_data.waveform_mode = WAVEFORM_MODE_AUTO;
-    update_data.update_mode = UPDATE_MODE_FULL;
+    update_data.waveform_mode = MXCFB_WAVEFORM_MODE_AUTO;
+    update_data.update_mode = MXCFB_UPDATE_MODE_FULL;
     update_data.temp = 0x18;
 
     if (ioctl(fb, MXCFB_SEND_UPDATE, &update_data) < 0) {
-        return ERROR_FULL_REFRESH;
+        return ERROR_MXCFB_UPDATE;
     }
     return NO_ERROR;
 }
@@ -92,7 +93,7 @@ int refresh_mxcfb(int fb) {
 int refresh_ebc(int fb, int ebc) {
     struct ebc_buf_info frame[2];
     if (ioctl(ebc, EBCIO_GET_EBC_BUFFER, &frame[0]) < 0) {
-        return ERROR_GET_EBC_BUF;
+        return ERROR_EBC_GET_BUF;
     }
 
     int buf_sz = frame[0].vir_width * frame[0].vir_height * 2;
@@ -107,18 +108,18 @@ int refresh_ebc(int fb, int ebc) {
     memset(buf + frame[0].offset, 0xFF, frame[0].vir_width * frame[0].vir_height / 2);
 
     if (ioctl(ebc, EBCIO_SET_EBC_SEND_BUFFER, &frame[0]) < 0) {
-        ret = ERROR_FULL_REFRESH;
+        ret = ERROR_EBC_SET_BUF;
         goto exit;
     }
 
     if (ioctl(ebc, EBCIO_GET_EBC_BUFFER, &frame[1]) < 0) {
-        return ERROR_GET_EBC_BUF;
+        return ERROR_EBC_GET_BUF;
     }
 
     frame[1].epd_mode = EBC_EPD_AUTO;
 
     if (ioctl(ebc, EBCIO_SET_EBC_SEND_BUFFER, &frame[1]) < 0) {
-        ret = ERROR_FULL_REFRESH;
+        ret = ERROR_EBC_SET_BUF;
         goto exit;
     }
 
