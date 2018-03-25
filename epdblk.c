@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
         goto exit;
     }
 
-    if (strncmp(fb_fix_info.id, "mxc_epdc", 8) == 0) {
+    if (IS_MXCFB(fb_fix_info.id)) {
         ret = refresh_mxcfb(fb);
         goto exit;
     }
