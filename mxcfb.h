@@ -36,6 +36,11 @@ enum {
     MXCFB_UPDATE_MODE_FULL    = 0x1,
 };
 
+enum {
+    MXCFB_FLAGS_ENABLE_INVERSION = 0x1,
+    MXCFB_FLAGS_FORCE_MONOCHROME = 0x2,
+};
+
 #define MXCFB_SEND_UPDATE 0x4040462E
 
 struct mxcfb_rect {
