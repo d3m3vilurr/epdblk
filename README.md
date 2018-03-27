@@ -18,3 +18,9 @@ then call
 ```bash
 epdblk 10
 ```
+
+if you need forceful full refresh, call it
+
+```bash
+epdblk 10 1
+```
