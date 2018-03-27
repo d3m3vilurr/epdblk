@@ -24,6 +24,11 @@ enum {
     ERROR_MMAP          = 0xF0,
 };
 
+enum {
+    REFRESH_WAVEFORM    = 0x0,
+    REFRESH_FULL        = 0x1,
+};
+
 static char *fb_devs[] = {
     "/dev/graphics/fb0",
     "/dev/fb0",
@@ -72,12 +77,30 @@ int close_ebc(int ebc) {
     return close(ebc);
 }
 
-int refresh_mxcfb(int fb) {
+int refresh_mxcfb(int fb, int mode) {
     if (ioctl(fb, FBIOGET_VSCREENINFO, &fb_var_info) < 0) {
         return ERROR_GET_VINFO;
     }
 
-    struct mxcfb_update_data update_data = {0};
+    struct mxcfb_update_data update_data;
+
+    if (mode == REFRESH_FULL) {
+        memset(&update_data, 0, sizeof(struct mxcfb_update_data));
+        update_data.update_region.width = fb_var_info.xres;
+        update_data.update_region.height = fb_var_info.yres;
+        update_data.waveform_mode = MXCFB_WAVEFORM_MODE_AUTO;
+        update_data.update_mode = MXCFB_UPDATE_MODE_PARTIAL;
+        update_data.temp = 0x18;
+        update_data.flags = MXCFB_FLAGS_ENABLE_INVERSION;
+
+        if (ioctl(fb, MXCFB_SEND_UPDATE, &update_data) < 0) {
+            return ERROR_MXCFB_UPDATE;
+        }
+
+        usleep(10000);
+    }
+
+    memset(&update_data, 0, sizeof(struct mxcfb_update_data));
     update_data.update_region.width = fb_var_info.xres;
     update_data.update_region.height = fb_var_info.yres;
     update_data.waveform_mode = MXCFB_WAVEFORM_MODE_AUTO;
@@ -87,6 +110,7 @@ int refresh_mxcfb(int fb) {
     if (ioctl(fb, MXCFB_SEND_UPDATE, &update_data) < 0) {
         return ERROR_MXCFB_UPDATE;
     }
+
     return NO_ERROR;
 }
 
@@ -141,6 +165,11 @@ int main(int argc, char **argv) {
     int sec = atoi(argv[1]);
     usleep(sec * 1000);
 
+    int mode = 0;
+    if (argc >= 3) {
+        mode = atoi(argv[2]);
+    }
+
     fb = open_framebuffer();
     if (fb < 0) {
         ret = ERROR_OPEN_FB;
@@ -152,8 +181,8 @@ int main(int argc, char **argv) {
         goto exit;
     }
 
-    if (strncmp(fb_fix_info.id, "mxc_epdc", 8) == 0) {
-        ret = refresh_mxcfb(fb);
+    if (IS_MXCFB(fb_fix_info.id)) {
+        ret = refresh_mxcfb(fb, mode);
         goto exit;
     }
 

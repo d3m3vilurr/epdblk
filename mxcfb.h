@@ -21,6 +21,12 @@
 #ifndef __MXCFB_H__
 #define __MXCFB_H__
 
+#define MXCFB_MAGIC0 0x5F63786D // mxc_
+#define MXCFB_MAGIC1 0x63647065 // epdc
+#define IS_MXCFB(id) \
+    (*(uint32_t*)(id) == MXCFB_MAGIC0) && \
+    (*(uint32_t*)((id) + 4) == MXCFB_MAGIC1)
+
 enum {
     MXCFB_WAVEFORM_MODE_AUTO  = 0x101,
 };
@@ -28,6 +34,11 @@ enum {
 enum {
     MXCFB_UPDATE_MODE_PARTIAL = 0x0,
     MXCFB_UPDATE_MODE_FULL    = 0x1,
+};
+
+enum {
+    MXCFB_FLAGS_ENABLE_INVERSION = 0x1,
+    MXCFB_FLAGS_FORCE_MONOCHROME = 0x2,
 };
 
 #define MXCFB_SEND_UPDATE 0x4040462E
