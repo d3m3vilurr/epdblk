@@ -28,7 +28,10 @@
     (*(uint32_t*)((id) + 4) == MXCFB_MAGIC1)
 
 enum {
-    MXCFB_WAVEFORM_MODE_AUTO  = 0x101,
+    MXCFB_WAVEFORM_MODE_INIT        = 0x0,
+    MXCFB_WAVEFORM_MODE_DU          = 0x1,
+    MXCFB_WAVEFORM_MODE_GC16        = 0x2,
+    MXCFB_WAVEFORM_MODE_AUTO        = 0x101,
 };
 
 enum {
@@ -37,11 +40,23 @@ enum {
 };
 
 enum {
-    MXCFB_FLAGS_ENABLE_INVERSION = 0x1,
-    MXCFB_FLAGS_FORCE_MONOCHROME = 0x2,
+    MXCFB_FLAG_ENABLE_INVERSION = 0x0001,
+    MXCFB_FLAG_FORCE_MONOCHROME = 0x0002,
+    MXCFB_FLAG_USE_AAD          = 0x1000,
 };
 
-#define MXCFB_SEND_UPDATE 0x4040462E
+enum {
+    MXCFB_TEMP_USE_REMARKABLE_DRAW  = 0x0018,
+    MXCFB_TEMP_USE_AMBIENT          = 0x1000,
+    MXCFB_TEMP_USE_PAPYRUS          = 0x1001,
+    MXCFB_TEMP_USE_MAX              = 0xFFFF,
+};
+
+enum {
+    MXCFB_UPDATE_SCHEME_SNAPSHOT        = 0x0,
+    MXCFB_UPDATE_SCHEME_QUEUE           = 0x1,
+    MXCFB_UPDATE_SCHEME_QUEUE_AND_MERGE = 0x2,
+};
 
 struct mxcfb_rect {
     uint32_t top;
@@ -66,5 +81,14 @@ struct mxcfb_update_data {
     uint32_t flags;
     struct mxcfb_alt_buffer_data alt_buffer_data;
 };
+
+struct mxcfb_update_marker_data {
+    uint32_t update_marker;
+    uint32_t collision_test;
+};
+
+#define MXCFB_SEND_UPDATE               _IOW('F', 0x2E, struct mxcfb_update_data)
+#define MXCFB_WAIT_FOR_UPDATE_COMPLETE  _IOWR('F', 0x2F, struct mxcfb_update_marker_data)
+#define MXCFB_UPDATE_SCHEME             _IOW('F', 0x32, uint32_t)
 
 #endif

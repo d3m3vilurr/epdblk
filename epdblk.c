@@ -9,6 +9,7 @@
 #include <linux/fb.h>
 #include "mxcfb.h"
 #include "ebc.h"
+#include <stdio.h>
 
 enum {
     NO_ERROR            = 0x00,
@@ -82,32 +83,42 @@ int refresh_mxcfb(int fb, int mode) {
         return ERROR_GET_VINFO;
     }
 
-    struct mxcfb_update_data update_data;
+    struct mxcfb_update_data update_data = {0};
+    struct mxcfb_update_marker_data marker_data;
+
+    update_data.update_region.width = fb_var_info.xres;
+    update_data.update_region.height = fb_var_info.yres;
+    update_data.update_mode = MXCFB_UPDATE_MODE_FULL;
+    update_data.temp = MXCFB_TEMP_USE_REMARKABLE_DRAW;
 
     if (mode == REFRESH_FULL) {
-        memset(&update_data, 0, sizeof(struct mxcfb_update_data));
-        update_data.update_region.width = fb_var_info.xres;
-        update_data.update_region.height = fb_var_info.yres;
+        //update_data.waveform_mode = MXCFB_WAVEFORM_MODE_INIT;
         update_data.waveform_mode = MXCFB_WAVEFORM_MODE_AUTO;
-        update_data.update_mode = MXCFB_UPDATE_MODE_PARTIAL;
-        update_data.temp = 0x18;
-        update_data.flags = MXCFB_FLAGS_ENABLE_INVERSION;
+        update_data.update_marker = 1;
+        update_data.flags = MXCFB_FLAG_ENABLE_INVERSION | MXCFB_FLAG_USE_AAD;
 
         if (ioctl(fb, MXCFB_SEND_UPDATE, &update_data) < 0) {
             return ERROR_MXCFB_UPDATE;
         }
 
-        usleep(10000);
+        memset(&marker_data, 0, sizeof(struct mxcfb_update_marker_data));
+        marker_data.update_marker = update_data.update_marker;
+        if (ioctl(fb, MXCFB_WAIT_FOR_UPDATE_COMPLETE, &marker_data) < 0) {
+            return ERROR_MXCFB_UPDATE;
+        }
     }
 
-    memset(&update_data, 0, sizeof(struct mxcfb_update_data));
-    update_data.update_region.width = fb_var_info.xres;
-    update_data.update_region.height = fb_var_info.yres;
     update_data.waveform_mode = MXCFB_WAVEFORM_MODE_AUTO;
-    update_data.update_mode = MXCFB_UPDATE_MODE_FULL;
-    update_data.temp = 0x18;
+    update_data.update_marker = 2;
+    update_data.flags = MXCFB_FLAG_USE_AAD;
 
     if (ioctl(fb, MXCFB_SEND_UPDATE, &update_data) < 0) {
+        return ERROR_MXCFB_UPDATE;
+    }
+
+    memset(&marker_data, 0, sizeof(struct mxcfb_update_marker_data));
+    marker_data.update_marker = update_data.update_marker;
+    if (ioctl(fb, MXCFB_WAIT_FOR_UPDATE_COMPLETE, &marker_data) < 0) {
         return ERROR_MXCFB_UPDATE;
     }
 
